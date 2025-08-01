@@ -2,7 +2,8 @@ const jobs = require("../database/models/jobModel");
 
 exports.postJob = async (req, res) => {
   try {
-    const { title, description, company, location, salary, requirements } = req.body;
+    const { title, description, company, location, salary, requirements } =
+      req.body;
     const employerId = req.userID; // from JWT middleware
     const userRole = req.role; // from JWT middleware
 
@@ -44,13 +45,64 @@ exports.postJob = async (req, res) => {
   }
 };
 
-exports.getPostJobDetails = async (req, res) => {
+// exports.getPostJobDetails = async (req, res) => {
+//   try {
+//     const employerId = req.userID; // 👈 extracted from token middleware
+
+//     const jobsByEmployer = await jobs
+//       .find({ employer: employerId }) // 👈 only their jobs
+//       .populate("employer", "name email");
+
+//     res.status(200).json(jobsByEmployer);
+//   } catch (error) {
+//     res.status(500).json({ error: error.message || error });
+//   }
+// };
+
+
+exports.deleteJobPost = async (req, res) => {
   try {
-    const allJobs = await jobs.find().populate("employer", "name email"); // populate employer details (name, email only)
-    res.status(200).json(allJobs);
+    const jobId = req.params.id;
+    const employerId = req.userID; // Assuming JWT middleware sets this
+
+    // Check if the job exists and is owned by the logged-in employer
+    const job = await jobs.findOne({ _id: jobId, employer: employerId });
+
+    if (!job) {
+      return res.status(404).json({ message: "Job not found or unauthorized" });
+    }
+
+    await jobs.findByIdAndDelete(jobId);
+
+    res.status(200).json({ message: "Job deleted successfully", job });
   } catch (error) {
     res.status(500).json({ error: error.message || error });
   }
 };
 
+exports.editJobPost = async (req, res) => {
+  try {
+    const jobId = req.params.id;
+    const employerId = req.userID; // From JWT middleware
+    const updatedData = req.body;
 
+    // Check if the job exists and is owned by the logged-in employer
+    const job = await jobs.findOne({ _id: jobId, employer: employerId });
+
+    if (!job) {
+      return res.status(404).json({ message: "Job not found or unauthorized" });
+    }
+
+    // Update job with new data
+    const updatedJob = await jobs.findByIdAndUpdate(jobId, updatedData, {
+      new: true, // return the updated document
+    });
+
+    res.status(200).json({
+      message: "Job updated successfully",
+      updatedJob,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message || error });
+  }
+};

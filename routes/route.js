@@ -14,6 +14,10 @@ router.post("/login", userController.loginUser);
 
 //Employee CRUD Section
 router.post("/postjob", jwt, multer.single("image"), jobController.postJob);
-router.get("/alljobpost", jobController.getPostJobDetails);
+// router.get("/alljobpost",jwt,jobController.getPostJobDetails);
+router.delete("/job/:id", jwt, jobController.deleteJobPost);
+router.put("/job/:id", jwt, jobController.editJobPost);
+
+
 
 module.exports = router;

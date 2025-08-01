@@ -9,6 +9,7 @@ const router = require("./routes/route");
 jobPortalServer.use(cors());
 
 jobPortalServer.use(express.json());
+jobPortalServer.use('/uploads',express.static('./uploads'))
 jobPortalServer.use(router);
 
 const PORT = 3000 || process.env.PORT;

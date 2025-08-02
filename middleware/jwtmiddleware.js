@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
 
 const jsonVerify = (req, res, next) => {
-  // console.log(req.headers["authorization"]);
+  console.log(req.headers["authorization"]);
 
   if (req.headers["authorization"]) {
     try {
@@ -13,7 +13,7 @@ const jsonVerify = (req, res, next) => {
       next();
 
       // console.log(jwtResponse);
-      // console.log(token);
+      console.log(token);
     } catch (err) {
       res.status(403).json(`Please provide a valid token`);
     }

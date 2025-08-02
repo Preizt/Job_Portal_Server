@@ -45,20 +45,31 @@ exports.postJob = async (req, res) => {
   }
 };
 
-// exports.getPostJobDetails = async (req, res) => {
-//   try {
-//     const employerId = req.userID; // 👈 extracted from token middleware
+exports.getPostJobDetails = async (req, res) => {
+  let { search } = req.query;
+  const employerId = req.userID; // extracted from token middleware
 
-//     const jobsByEmployer = await jobs
-//       .find({ employer: employerId }) // 👈 only their jobs
-//       .populate("employer", "name email");
+  try {
+    // Base query to filter jobs posted by this employer
+    let query = { employer: employerId };
 
-//     res.status(200).json(jobsByEmployer);
-//   } catch (error) {
-//     res.status(500).json({ error: error.message || error });
-//   }
-// };
+    // If a search term is provided, match job titles case-insensitively
+    if (search) {
+      query.title = { $regex: search, $options: "i" }
+      
+      
+    }
 
+    // Fetch jobs and populate employer details
+    const jobsByEmployer = await jobs.find(query).populate("employer", "name email");
+
+    console.log(jobsByEmployer);
+
+    res.status(200).json(jobsByEmployer);
+  } catch (error) {
+    res.status(500).json({ error: error.message || error });
+  }
+};
 
 exports.deleteJobPost = async (req, res) => {
   try {
@@ -106,3 +117,26 @@ exports.editJobPost = async (req, res) => {
     res.status(500).json({ error: error.message || error });
   }
 };
+
+exports.singlePostView = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const job = await jobs.findById({ _id: id });
+    res.status(200).json(job);
+  } catch (error) {
+    res.status(500).json(error);
+  }
+};
+
+exports.getAllJobs = async (req, res) => {
+  try {
+    const alljobs = await jobs.find();
+    res.status(200).json(alljobs);
+  } catch (error) {
+    console.error("Error fetching jobs:", error);
+    res.status(500).json({ message: "Failed to fetch jobs", error: error.message });
+  }
+};
+
+

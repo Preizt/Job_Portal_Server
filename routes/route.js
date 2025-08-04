@@ -28,5 +28,7 @@ router.get("/job/:id",jobController.singlePostView);
 
 //GET all Post Applicant Side
 router.get("/alljob",jobController.getAllJobs)
+router.post("/job/:id", jwt, jobController.saveJob);
+
     
 module.exports = router;

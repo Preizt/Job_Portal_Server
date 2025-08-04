@@ -55,13 +55,13 @@ exports.getPostJobDetails = async (req, res) => {
 
     // If a search term is provided, match job titles case-insensitively
     if (search) {
-      query.title = { $regex: search, $options: "i" }
-      
-      
+      query.title = { $regex: search, $options: "i" };
     }
 
     // Fetch jobs and populate employer details
-    const jobsByEmployer = await jobs.find(query).populate("employer", "name email");
+    const jobsByEmployer = await jobs
+      .find(query)
+      .populate("employer", "name email");
 
     console.log(jobsByEmployer);
 
@@ -135,8 +135,37 @@ exports.getAllJobs = async (req, res) => {
     res.status(200).json(alljobs);
   } catch (error) {
     console.error("Error fetching jobs:", error);
-    res.status(500).json({ message: "Failed to fetch jobs", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Failed to fetch jobs", error: error.message });
   }
 };
 
+exports.saveJob = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { jobId } = req.body;
 
+    const job = await Job.findById(jobId);
+    if (!job) {
+      return res.status(404).json({ message: "Job not found" });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized user" });
+    }
+
+    if (user.savedJobs.includes(jobId)) {
+      return res.status(400).json({ message: "Job already saved" });
+    }
+
+    user.savedJobs.push(jobId);
+    await user.save();
+
+    res.status(200).json({ message: "Job saved successfully" });
+  } catch (err) {
+    console.error("Save Job Error:", err);
+    res.status(500).json({ message: "Server error while saving job" });
+  }
+};

@@ -2,11 +2,14 @@ const express = require("express");
 
 const router = express.Router();
 
+//Middleware for verification and multimedia upload 
 const jwt = require("../middleware/jwtmiddleware");
 const multer = require("../middleware/multer");
 
+
 const userController = require("../controllers/userController");
 const jobController = require("../controllers/jobController");
+const applicantController = require("../controllers/applicantController")
 
 // Authentication
 router.post("/register", userController.registerUser);
@@ -15,7 +18,7 @@ router.post("/login", userController.loginUser);
 // Google Auth
 router.post("/auth/google", userController.googleLogin);
 
-
+router.get("/user", jwt, userController.getUser);
 
 //Employee CRUD Section
 router.post("/postjob", jwt, multer.single("image"), jobController.postJob);
@@ -26,9 +29,16 @@ router.put("/job/:id", jwt, multer.single("image"), jobController.editJobPost);
 //SinglePostViewEmployerSide
 router.get("/job/:id",jobController.singlePostView);
 
-//GET all Post Applicant Side
+//Applicant Side
 router.get("/alljob",jobController.getAllJobs)
-router.post("/job/:id", jwt, jobController.saveJob);
+router.post("/job", jwt, jobController.saveJob);
+router.get("/job",jwt,jobController.getSavedJobs)
+router.patch("/job/:id", jwt, jobController.removeSavedJob);
+
+
+//Application Side
+router.post("/apply",jwt, multer.single("resume"),applicantController.createApplicant);
+router.get("/applications",jwt,applicantController.getMyApplications)
 
     
 module.exports = router;

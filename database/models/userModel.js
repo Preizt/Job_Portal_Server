@@ -18,6 +18,12 @@ const userSchema = new mongoose.Schema({
     type: String, // removed 'required: true'
     default: null // optionally set a default
   },
+  savedJobs: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "jobs",
+    },
+  ],
 });
 
 const users = mongoose.model("users", userSchema);

@@ -1,4 +1,5 @@
 const jobs = require("../database/models/jobModel");
+const users = require("../database/models/userModel");
 
 exports.postJob = async (req, res) => {
   try {
@@ -143,15 +144,15 @@ exports.getAllJobs = async (req, res) => {
 
 exports.saveJob = async (req, res) => {
   try {
-    const userId = req.userId;
+    const userId = req.userID;
     const { jobId } = req.body;
 
-    const job = await Job.findById(jobId);
+    const job = await jobs.findById(jobId);
     if (!job) {
       return res.status(404).json({ message: "Job not found" });
     }
 
-    const user = await User.findById(userId);
+    const user = await users.findById(userId);
     if (!user) {
       return res.status(401).json({ message: "Unauthorized user" });
     }
@@ -167,5 +168,47 @@ exports.saveJob = async (req, res) => {
   } catch (err) {
     console.error("Save Job Error:", err);
     res.status(500).json({ message: "Server error while saving job" });
+  }
+};
+
+exports.getSavedJobs = async (req, res) => {
+  try {
+    const userId = req.userID;
+
+    const user = await users.findById(userId).populate("savedJobs"); // populate job details
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    res.status(200).json(user.savedJobs);
+  } catch (err) {
+    // console.error("Get Saved Jobs Error:", err);
+    res.status(500).json({ message: "Server error while fetching saved jobs" });
+  }
+};
+
+exports.removeSavedJob = async (req, res) => {
+  try {
+    const userId = req.userID;
+    const jobId = req.params.id;
+
+    // Find the user
+    const user = await users.findById(userId);
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    // Remove the jobId from savedJobs array
+    const updatedUser = await users
+      .findByIdAndUpdate(userId, { $pull: { savedJobs: jobId } }, { new: true })
+      .populate("savedJobs");
+
+    res.status(200).json({
+      message: "Job removed from saved list",
+      savedJobs: updatedUser.savedJobs,
+    });
+  } catch (err) {
+    console.error("Remove Saved Job Error:", err);
+    res.status(500).json({ message: "Server error while removing saved job" });
   }
 };

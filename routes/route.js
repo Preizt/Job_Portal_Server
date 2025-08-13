@@ -10,6 +10,7 @@ const multer = require("../middleware/multer");
 const userController = require("../controllers/userController");
 const jobController = require("../controllers/jobController");
 const applicantController = require("../controllers/applicantController")
+const employerDashController = require("../controllers/employerDashControlller")
 
 // Authentication
 router.post("/register", userController.registerUser);
@@ -40,5 +41,18 @@ router.patch("/job/:id", jwt, jobController.removeSavedJob);
 router.post("/apply",jwt, multer.single("resume"),applicantController.createApplicant);
 router.get("/applications",jwt,applicantController.getMyApplications)
 
+//Employee Application Side
+router.get("/jobapplication",jwt,applicantController.getApplicantsForEmployerJobs)
+
+
+//Accept and Reject
+router.patch("/application/:id", applicantController.acceptApplication);
+router.patch("/rejectapplication/:id", applicantController.rejectApplication);
+
+//Employer Dasboard 
+
+router.get("/employer/stats", jwt,employerDashController.getEmployerDashboardStats );
+router.get("/employer/chart", jwt,employerDashController.getMonthlyApplications );
     
 module.exports = router;
+    

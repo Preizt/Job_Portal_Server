@@ -1,33 +1,29 @@
 const jobs = require("../database/models/jobModel");
 const users = require("../database/models/userModel");
+const { sendNewJobNotification } = require("../socket/socket");
+
 
 exports.postJob = async (req, res) => {
   try {
-    const { title, description, company, location, salary, requirements } =
-      req.body;
-    const employerId = req.userID; // from JWT middleware
-    const userRole = req.role; // from JWT middleware
+    const { title, description, company, location, salary, requirements } = req.body;
+    const employerId = req.userID; 
+    const userRole = req.role; 
 
-    // 1. Role check: Only employers can post
     if (userRole !== "employer") {
       return res.status(403).json({ message: "Only employers can post jobs." });
     }
 
-    // 2. Image check
     if (!req.file) {
       return res.status(400).json({ message: "Image is required" });
     }
 
     const image = req.file.filename;
 
-    // 3. Prevent duplicate jobs
     const existingJob = await jobs.findOne({ title, company });
-
     if (existingJob) {
       return res.status(409).json("Job Already Exists");
     }
 
-    // 4. Create job
     const newJob = new jobs({
       title,
       description,
@@ -40,6 +36,17 @@ exports.postJob = async (req, res) => {
     });
 
     await newJob.save();
+
+    // 🔔 Notify all connected applicants
+    sendNewJobNotification({
+      title: newJob.title,
+      company: newJob.company,
+      location: newJob.location,
+      salary: newJob.salary,
+      
+      id: newJob._id,
+    });
+
     res.status(201).json({ newJob });
   } catch (error) {
     res.status(500).json({ Error: error.message || error });
@@ -64,7 +71,7 @@ exports.getPostJobDetails = async (req, res) => {
       .find(query)
       .populate("employer", "name email");
 
-    console.log(jobsByEmployer);
+    // console.log(jobsByEmployer);
 
     res.status(200).json(jobsByEmployer);
   } catch (error) {

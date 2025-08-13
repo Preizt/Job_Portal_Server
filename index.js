@@ -1,19 +1,28 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+const http = require("http");
 require("./database/dbConnection");
 
-const jobPortalServer = express();
 const router = require("./routes/route");
+const { socketHandler } = require("./socket/socket");
 
+const jobPortalServer = express();
+
+// Middleware
 jobPortalServer.use(cors());
-
 jobPortalServer.use(express.json());
-jobPortalServer.use('/uploads',express.static('./uploads'))
+jobPortalServer.use('/uploads', express.static('./uploads'));
 jobPortalServer.use(router);
 
-const PORT = 3000 || process.env.PORT;
+// Create HTTP server from Express
+const server = http.createServer(jobPortalServer);
 
-jobPortalServer.listen(PORT, () => {
+// Pass HTTP server to Socket.IO handler
+socketHandler(server);
+
+const PORT = process.env.PORT || 3000;
+
+server.listen(PORT, () => {
   console.log(`Port running successfully on ${PORT}`);
 });
